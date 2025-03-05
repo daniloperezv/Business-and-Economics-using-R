@@ -1,0 +1,157 @@
+---
+title: "Colegios"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+#install.packages("flexdashboard")
+#install.packages("DT")
+#install.packages("tidyverse")
+#install.packages("DT")
+#install.packages("shiny")
+library(shiny)
+library(flexdashboard)
+library(leaflet)
+library(dplyr)
+library(readr)
+library(stringr)
+library(ggplot2)
+library(DT)
+#Una vez que se instala el paquete flexdashboard. New file, R-markdown, From Template, #flexdashboard ok.
+
+#Indica que tan grande es la columna. 650 + 350 = 1000. Debe sumar 1000. Chart A + Chart B + #Chart C 
+```
+
+
+```{r}
+rm(list = ls())
+colegios = read_csv("/cloud/project/colegios2018.csv",
+                    col_types = cols(
+                      LATITUD = col_character(),
+                      LONGITUD = col_character()
+                     )
+                     )
+colegios$LATITUD = as.numeric(str_replace_all(colegios$LATITUD, ",", "."))
+colegios$LONGITUD = as.numeric(str_replace_all(colegios$LONGITUD, ",", "."))
+colegios$dependencia = as.factor(colegios$COD_DEPE2)
+
+colegios2 = colegios %>% filter(ESTADO_ESTAB == 1)
+
+colegios2 = colegios2 %>% mutate(dependencia = recode_factor(dependencia, "1" = "Municipal", "2" = "Part. Subvencionado", "3" = "Part. Pagado", "4" = "Corp. Admin. Delegada", "5" = "Serv. Local Educacion"))
+```
+
+```{r}
+textInput("nombre_comuna", label = "Comuna", value = "SANTIAGO", width = '100%')
+
+selectInput("dep_colegio", label = "Dependencia Colegio:",
+            choices = c("Municipal", "Part. Subvencionado", "Part. Pagado", "Corp. Admin. Delegada", "Serv. Local Educacion"), selected = "Municipal", multiple = TRUE)
+
+colegios2_df = reactive({
+  colegios2 %>% 
+    filter(NOM_COM_RBD == input$nombre_comuna,
+           dependencia %in% input$dep_colegio)
+})
+```
+
+
+Dependencia Colegios
+======================================================================
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Mapa
+
+```{r}
+pal = colorFactor(palette = c("red", "blue", "black", "green", "orange"), levels = c("Municipal", "Part. Subvencionado", "Part. Pagado", "Corp. Admin. Delegada", "Serv. Local Educacion"))
+
+colegios %>% filter(NOM_COM_RBD == "SANTIAGO") %>% leaflet() %>% addTiles() %>% addCircleMarkers(lng = ~LONGITUD, lat = ~LATITUD, radius = 2, label = ~as.character(NOM_RBD), color = ~pal(dependencia)) %>%  addLegend(pal = pal,
+            values = c("Municipal", "Part. Subvencionado", "Part. Pagado", "Corp. Admin. Delegada", "Serv. Local Educacion"),
+            opacity = 0.5,
+            title = "Dependencia", position = "topright") %>%
+  setView(lng = -70.6539, lat = -33.4429, zoom = 15)
+```
+
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Numero de Colegios
+
+```{r}
+num_schools = nrow(colegios2)
+
+valueBox(prettyNum(num_schools),
+         caption = "Numero de colegios",
+         icon = "fa-school")
+#fontawesome para ver iconos.
+```
+
+### % de Colegios Municipales Chile
+
+```{r}
+muni = round(100*mean(colegios2$dependencia == "Municipal", na.rm = TRUE), 1)
+gauge(value = muni,
+      min = 0,
+      max = 100,
+      symbol = "%")
+```
+
+### % Colegios Municipales por Region
+
+```{r}
+val = c("red", "blue", "black", "green", "orange")
+lab = c("Municipal", "Part. Subvencionado", "Part. Pagado", "Corp. Admin. Delegada", "Serv. Local Educacion")
+
+colegios2 = colegios %>% mutate(region = recode(COD_REG_RBD,
+                                                "1" = "Tarapaca",
+                                                "2" = "Antofagasta",
+                                                "3" = "Atacama",
+                                                "4" = "Coquimbo",
+                                                "5" = "Valparaiso",
+                                                "6" = "O'higgins",
+                                                "7" = "Maule",
+                                                "8" = "Biobio",
+                                                "9" = "Araucania",
+                                                "10" = "Los Lagos",
+                                                "11" = "Aysen",
+                                                "12" = "Magallanes",
+                                                "13" = "Metropolitana",
+                                                "14" = "Los Rios",
+                                                "15" = "Arica y Parinacota"))
+colegios2 %>% ggplot(aes(x = region, fill = dependencia)) +
+  geom_bar(position = "fill") +
+  scale_fill_manual("", values = val, labels = lab) +
+  labs(x = "", y = "%") + theme_bw() + coord_flip()
+```
+
+
+Datos
+===================================================================
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Tabla de datos
+
+```{r}
+colegios3 = colegios2 %>% select(NOM_RBD, COD_REG_RBD, NOM_COM_RBD, dependencia)
+colegios3 = colegios3 %>% rename(Colegio = NOM_RBD,
+                                 Region = COD_REG_RBD,
+                                 Comuna = NOM_COM_RBD,
+                                 Dependencia = dependencia)
+
+library(DT)
+datatable(colegios3, rownames = FALSE, filter = 'top',
+          extensions = 'Buttons', options = list(
+            autoWidth = TRUE,
+            options = list(page_Lenght = 15),
+            dom = 'Bfrtip',
+            buttons = c('copy', 'csv', 'excel', 'pdf', 'print')))
+
+```
+
