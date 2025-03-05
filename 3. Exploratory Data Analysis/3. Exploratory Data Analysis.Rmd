@@ -1,0 +1,130 @@
+---
+title: "Perez"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Desde ahora en adelante vamos a trabajar con World Development Indicators
+```{r}
+#install.packages("dplyr")
+#install.packages("WDI")
+library(dplyr)
+library(WDI)
+```
+
+Variables. Poblacion, Expectativa de vida al nacer y PIB per capita
+
+```{r}
+wbData=WDI(indicator=c("SP.POP.TOTL","SP.DYN.LE00.IN","NY.GDP.PCAP.PP.CD")
+           ,country="all", extra=TRUE, start=1960, end=2016)
+```
+
+1)
+
+```{r}
+wbData2 = wbData %>% rename(population = SP.POP.TOTL, lifeExpectancy = SP.DYN.LE00.IN,
+gdppc = NY.GDP.PCAP.PP.CD)
+```
+
+2)
+
+```{r}
+wbData2 = wbData2 %>%  filter(region != "Aggregates") %>% droplevels()
+```
+
+3)
+
+```{r}
+wbData2 = wbData2 %>% arrange(country, year)
+```
+
+4)
+
+```{r}
+wbData2 = wbData2 %>% mutate(region = recode_factor(region,
+"East Asia & Pacific" = "Este Asiatico y Pacifico",
+"Europe & Central Asia" = "Europa y Asia Central",
+"Latin America & Caribbean" = "América Latina y el Caribe",
+"Middle East & North Africa" = "Medio Oriente y Norte Africa",
+"North America" = "Norteamerica",
+"South Asia" = "Asia del Sur",
+"Sub-Saharan Africa" = "Africa Subsahariana"))
+```
+
+5)
+
+```{r}
+wbData2 %>% distinct(country) %>% count()
+wbData2 %>% group_by(region) %>% distinct(country) %>% count() %>% arrange(desc(n))
+wbData2 %>% filter(region == "Europa y Asia Central") %>% distinct(country) %>% count()
+```
+
+6)
+
+```{r}
+wbData2 %>% filter(year == 2015) %>% select(country, population) %>% arrange(desc(population)) %>% head(5)
+```
+
+7)
+
+```{r}
+wbData2 %>% filter(year == 2015) %>% select(country, gdppc) %>% arrange(gdppc) %>% head(10)
+```
+
+8)
+
+```{r}
+wbData2 %>% filter(year == 2015) %>% group_by(region) %>% summarise(
+gdppc_min = min(gdppc, na.rm = TRUE),
+gdppc_max = max(gdppc, na.rm = TRUE),
+gdppc_mean = mean(gdppc, na.rm = TRUE),
+gdppc_median = median(gdppc, na.rm = TRUE))
+
+wbData2 %>% filter(year == 2015) %>% group_by(region) %>% summarise(gdppc_min = min(gdppc, na.rm = TRUE), min_country = country[which(gdppc == gdppc_min)], gdppc_max = max(gdppc, na.rm = TRUE),
+max_country = country[which(gdppc == gdppc_max)])
+```
+
+9)
+
+```{r}
+wbData2 %>% filter(year %in% c(1990,2015), country %in%
+c("Chile", "United States")) %>%
+select(country, year, gdppc)
+```
+
+10)
+
+```{r}
+wbData2 %>% filter(region == "América Latina y el Caribe", year == 2015) %>% summarise(gdppc_prom = mean(gdppc, na.rm = TRUE),
+gdppc_sd = sd(gdppc, na.rm = TRUE), gdppc_min = min(gdppc, na.rm = TRUE))
+```
+
+11)
+
+```{r}
+wbData3 = wbData2 %>% mutate(pop1000 = population/1000)
+```
+
+12)
+
+```{r}
+wb = wbData3 %>% select(country, year, population, gdppc, lifeExpectancy)
+summary(wb)
+```
+
+Guardamos base de datos
+
+```{r}
+saveRDS(wbData3, "/cloud/project/wbData3.rds")
+```
+
+
+
+
+
+
+
+
