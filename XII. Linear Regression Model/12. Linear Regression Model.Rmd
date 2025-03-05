@@ -1,0 +1,155 @@
+---
+title: "Guía 12"
+author: "Danilo Pérez"
+date: "17/6/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pregunta 1
+
+# Pregunta 2
+
+## a)
+```{r}
+library(wooldridge)
+attach(wage1)
+wage1 = wage1
+wage1$marrmale = married*(1-female)  #hombres casados
+wage1$marrfem = married*female  #mujeres casadas
+wage1$singlefem = (1-married)*female  #mujeres solteras
+```
+
+```{r}
+model1 = lm(log(wage) ~ marrmale + marrfem + singlefem + educ + exper + expersq + tenure + tenursq, data = wage1)
+```
+
+```{r}
+#install.packages("stargazer")
+library(stargazer)
+stargazer(list(model1), type = "latex", header = FALSE)
+```
+
+
+## b)
+```{r}
+y = wage1$lwage
+x = cbind(1, wage1$marrmale, wage1$marrfem, wage1$singlefem, wage1$educ, wage1$exper, wage1$expersq, wage1$tenure, wage1$tenuresq )
+
+bhat = round(solve(t(x) %*% x) %*% t(x) %*% y, 3)
+bhat
+```
+
+
+## c)
+```{r}
+confint(model1, level = 0.95)
+```
+
+
+## d)
+```{r}
+vcov(model1)
+round(diag(sqrt(vcov(model1))), 4)
+```
+
+
+## e)
+```{r}
+#Correción de Moulton es para corregir por la correlación que existe intra-clusters (ej. correlación dentro de los colegios)
+#install.packages("sandwich")
+library(sandwich)
+round(diag(sqrt(vcovHC(model1, type = "HC1"))), 4)
+```
+
+
+# Pregunta 3
+
+## a)
+```{r echo=FALSE, message=FALSE}
+#install.packages("lmtest")
+library(lmtest)
+data(smoke)
+smoke = smoke
+```
+
+```{r echo=FALSE, message=FALSE}
+model3 = lm(cigs ~ log(income) + log(cigpric) + educ + age + agesq + restaurn, data = smoke)
+```
+
+```{r message=FALSE, echo=FALSE, results='asis', include=FALSE}
+stargazer(list(model3), type = "latex", header = FALSE)
+```
+
+
+## b)
+```{r echo=FALSE, results='hide'}
+smoke$residuo = residuals(model3)  #residuos
+smoke$residuo_sq = smoke$residuo^2  #residuos al cuadrado
+model_mco_u2 = lm(residuo_sq ~ log(income) + log(cigpric) + educ + age + agesq + restaurn, data = smoke)
+```
+
+```{r message=FALSE, echo=FALSE, results='asis', include=FALSE}
+stargazer(list(model_mco_u2), type = "latex", header = FALSE)
+```
+
+```{r}
+paste0("Test F: p-value = ", round(1-pf(5.552, 6, 800), 6))
+```
+
+```{r}
+paste0("Test Multiplicador de Lagrange: p-value = ", round(1-pchisq(807*round(summary(model_mco_u2)$r.squared, 3), 6), 6))
+#Con summary recupero el R2. También podría recuperar algún otro estadístico
+```
+
+```{r}
+bptest(model3)
+
+#Por lo tanto, se rechaza la hipótesis nula de homocedasticidad
+```
+
+
+## c)
+```{r echo=FALSE, results='hide'}
+smoke$PredCig = predict(model3)
+```
+
+```{r echo=FALSE, results='hide'}
+model2_u2_w = lm(residuo_sq ~ PredCig + I(PredCig^2), data = smoke)
+```
+
+```{r echo=FALSE, results='hide'}
+stargazer(list(model2_u2_w), type = "latex", header = FALSE)
+```
+
+```{r echo=FALSE}
+paste0("p-value = ", round(1-pchisq(807*summary(model2_u2_w)$r.squared, 2), 4))
+```
+
+```{r echo=FALSE}
+bptest(model3, ~ fitted(model3) + I(fitted(model3)))
+```
+
+
+## d)
+```{r}
+model_mco_logu2 = lm(log(residuo_sq) ~ log(income)+ log(cigpric) + educ + age + agesq + restaurn, data = smoke)
+
+smoke$h = exp(predict(model_mco_logu2))
+
+model_mccg = lm(cigs ~ log(income) + log(cigpric) + educ + age + agesq + restaurn, weight=(1/h), data = smoke)
+```
+
+```{r message=FALSE, echo=FALSE, results='asis', include=FALSE}
+stargazer(list(model3, model_mccg), type = "latex", dep.var.labels.include = FALSE, column.labels = c("MCO", "MCGF"), model.numbers = FALSE, header = FALSE)
+```
+
+
+
+
+
+
+
