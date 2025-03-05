@@ -1,0 +1,178 @@
+---
+title: "Guía 11"
+author: "Danilo Perez"
+date: "10/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pregunta 1
+
+## a)
+```{r}
+dpois(4,1.8)
+```
+
+## b)
+Prob(x>=2) = 1 - P(x<=1)
+Prob(x>=2) = 1 - P(x=0) - P(x=1)
+```{r}
+1-dpois(0,1.8)-dpois(1,1.8)
+1-dpois(1,1.8)
+```
+
+# Pregunta 2
+
+```{r}
+(1-punif(1400,1000,2000))*5000
+```
+
+# Pregunta 3
+
+```{r}
+b = rep(c("roja", "azul"), times = c(4,6))
+b
+
+set.seed(123)
+R = 10000  # numero de replicaciones
+n = 10     # tamaño muestral
+
+eventos = replicate(R, sample(b, n, replace = T))
+table(eventos)
+prop.table(table(eventos))
+```
+
+# Pregunta 4
+
+## a)
+```{r}
+R=10000 #Numero de repeticiones
+n=30 #Tamaño de curso
+
+bdays=sample(1:365, n, replace = TRUE)
+bdays
+duplicated(bdays)
+any(duplicated(bdays))
+
+results=replicate(R,
+                  {bdays=sample(1:365, n, replace = TRUE)
+                  any(duplicated(bdays))})
+mean(results)
+table(results)
+prop.table(table(results))
+```
+
+
+## b)
+```{r}
+bday_problem=function(n, R=10000) {
+  mismo_dia=replicate(R,
+                      {bdays=sample(1:365, n, replace = TRUE)
+                      any(duplicated(bdays))})
+  mean(mismo_dia)
+}
+bday_problem(10) #Evaluando la función si n fuera 10
+```
+
+
+## c)
+```{r}
+#install.packages("dplyr")
+#install.packages("ggplot2")
+library(dplyr)
+library(ggplot2)
+n = seq(1,80)
+prob=sapply(n, bday_problem)
+p=data.frame(n,prob)
+p %>% ggplot(aes(x=n, y=prob)) + geom_line(size=0.8) +
+  labs(x = "Tamaño del curso", y = "Probabilidad") +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line()
+  )
+```
+
+
+## d)
+```{r}
+library(dplyr)
+library(ggplot2)
+bday_prob=function(R, n=30) {
+  mismo_dia=replicate(R,
+                      {bdays=sample(1:365, n, replace = TRUE)
+                      any(duplicated(bdays))})
+  mean(mismo_dia)
+}
+
+R=10*seq(1,5,len=100)
+probR=sapply(R, bday_prob)
+logR=log10(R)
+
+p=data.frame(logR, probR)
+p %>% ggplot(aes(x=logR, y=probR)) + geom_line(size=0.8) +
+  labs(x = "Logaritmo (base 10) del número de repeticiones", y = "Probabilidad") +
+  theme(
+    panel.background = element_blank(),
+    axis.line = element_line()
+  )
+```
+
+
+# Pregunta 5
+
+```{r}
+library(dplyr)
+library(ggplot2)
+```
+
+## a)
+```{r}
+Y = sample(c(-1,1), 1000, replace = TRUE, prob = c(18/38, 20/38))
+sum(Y)
+```
+
+
+## b)
+```{r}
+rep = 10000
+n = 1000 #Numero de lanzamientos
+S = replicate(rep, {
+  X = sample(c(-1, 1), n, replace = TRUE, prob = c(18/38, 20/38))
+  Z = sum(X)
+})
+```
+
+
+## c)
+```{r}
+mean(S<0)
+```
+
+
+## d)
+```{r}
+mean(S)
+sd(S)
+```
+
+
+## e)
+```{r}
+data = data.frame(S)
+ggplot(data) +
+  geom_histogram(aes(S, ..density..), col="black", binwidth = 8) +
+  stat_function(fun = dnorm, args = list(mean=mean(S), sd=sd(S)),
+                geom = "line", colour="red", size=1.3) +
+  xlab("S") +
+  ylab("Densidad") + theme_bw()
+```
+
+
+
+
+
+
+
