@@ -1,0 +1,119 @@
+---
+title: "Guia 9"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pregunta 1
+
+Funcion que entregue como output si un numero x es o no divisible por 2
+```{r}
+divisible2 = function(x){
+  if (x %% 2 == 0){
+    print(paste(x, "es divisible por 2"))
+  }
+  else{
+    print(paste(x, "no es divisible por 2"))
+  }
+}
+divisible2(7)
+```
+
+
+# Pregunta 2
+
+```{r}
+compute_s_n = function(n){
+  x = (1:n)
+  x2 = x**2
+  s = sum(x2)
+  s
+  return(s)
+  return(c(n,s))
+}
+ compute_s_n(5)
+```
+
+
+# Pregunta 3
+
+Para duplicar el pib con crecimiento a tasa de 4%
+```{r}
+dos_a = function(x){
+  n = log10(2)/log10(1+(x/100))
+  return(n)
+}
+dos_a(2)
+```
+
+
+# Pregunta 4
+
+```{r}
+avg = function(x, arithmetic=TRUE){
+  x = x[!is.na(x)]
+  n = length(x)
+  ifelse(arithmetic, sum(x)/n, prod(x)**(1/n))
+}
+
+v=c(4,5,6,NA,2)
+avg(v)
+avg(v, arithmetic = TRUE)
+avg(v, arithmetic = FALSE)
+```
+
+
+# Pregunta 5
+
+```{r}
+des = function(x){
+  x = x[!is.na(x)]
+  media = sum(x)/length(x)
+  sdesv = sqrt(sum(x-media)**2)/(length(x)-1)
+  return(list(MEDIA = media, DESVIACION_ESTANDAR=sdesv))
+}
+v=c(1,10,6,4,3,NA)
+des(v)
+mean(v,na.rm = T)
+sd(v, na.rm = T)
+```
+
+
+# Pregunta 6
+cobb douglas
+
+```{r}
+cobb = function(alpha,beta,u){
+  x = seq(1,10,0.1)
+  y = (u/(x)**alpha)**(1/beta)
+  plot(x,y, type="l")
+}
+
+cobb(0.5, 0.5, 1)
+```
+
+
+# Pregunta 7
+
+```{r}
+vpn = function(x,r){
+  T = length(x)
+  paste0("VPN = ", round(sum(x*(1/(1+r))**(seq(0,T-1,1))),0))
+}
+
+flujo = c(-500000,100000,150000,180000,200000,300000)
+vpn(flujo,0.12)
+```
+
+
+# Pregunta 8 (incompleta)
+
+```{r}
+vpn <- function(x,r){
+  T<- length(x)
+paste0("VPN = ", round(sum(x*(1/(1+r))**(seq(0,T-1,1))),0))
+}
+```
