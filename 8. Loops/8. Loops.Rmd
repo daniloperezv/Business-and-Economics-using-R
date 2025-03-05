@@ -1,0 +1,164 @@
+---
+title: "Guía 8"
+author: "Danilo Pérez"
+date: "27/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 4, echo = TRUE)
+rm(list = ls())
+```
+
+# Pregunta 1
+
+```{r echo=FALSE, results='hide'}
+for (i in 1:10) {
+  cat("Iteración ", i, "\n")
+  #\n es para que salte al siguiente numero
+  #cat similar al print
+  print(i)
+}
+```
+
+```{r echo=FALSE, results='hide'}
+i = 1
+while (i<=10) {
+  print(i)
+  i = i+1
+}
+```
+
+
+# Pregunta 2
+
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+x=LETTERS[1:5]
+
+for (i in x) {
+  cat(i, "")
+}
+```
+
+```{r echo=FALSE, results='hide'}
+x=LETTERS[1:5]
+i = 1
+while (i<=length(x)) {
+  cat(x[i], "")
+  i = i+1
+}
+
+```
+
+```{r}
+country = c("Chile", "Argentina", "Bolivia")
+i = 1
+while (i <= length(country)) {
+  cat(country[i], "")
+  i = i+1
+}
+```
+
+
+# Pregunta 3
+
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+for (i in 1:5) {
+  cat(i-1, "+", i, "=", 2*i-1, "\n")
+}
+```
+
+```{r echo=FALSE, results='hide'}
+i = 1
+while (i <=5 ) {
+  cat(i-1, "+", i, "=", 2*i-1, "\n")
+  i = i+1
+}
+```
+
+
+# Pregunta 4
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+for (i in 1:10) {
+  if (i <= 6) {
+    cat("El cuadrado del número", i, "es", i^2, "\n")
+  }
+  else {
+    cat(0, "\n")
+  }
+}
+```
+
+```{r echo=FALSE, results='hide'}
+for (i in 1:10) {
+  if (i <= 6) {
+    print(paste("El cuadrado del número", i, "es", i^2))
+  }
+  else {
+   print(0)
+  }
+}
+```
+
+
+# Pregunta 5
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+for (n in 1:15) {
+  if (n %% 6 == 0) {
+    #print(paste(n, "es divisible por 6"))
+    cat(n, "es divisible por 6", "\n")
+#%%es para ver el resto de la división
+  }
+  else {
+    #print(paste(n, "no es divisible por 6"))
+    cat(n, "no es divisible por 6", "\n")
+  }
+}
+```
+
+
+# Pregunta 6
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+#install.packages("tidyverse")
+library(tidyverse)
+df = tibble(
+  x = 1:5,
+  y = c(2, 0, 1, 4, NA)
+)
+
+for (i in 1:length(df)) {
+  x_bar = mean(df[[i]], na.rm = TRUE)
+  #Doble corchete es para indicar valor de la columna
+  cat(x_bar, "es el promedio de la columna", i, "\n")
+}
+```
+
+```{r echo=FALSE, results='hide'}
+apply(df, 2, function(x) sum(x[!is.na(x)])/length(x[!is.na(x)]))
+```
+
+```{r echo=FALSE, results='hide'}
+apply(df, 2, mean, na.rm = TRUE)
+```
+
+
+# Pregunta 7
+
+```{r echo=FALSE, results='hide'}
+rm(list = ls())
+A = rbind(c(2, 4, 0), c(-1, 9, 6), c(0, 0, 1))
+A
+```
+
+```{r echo=FALSE, results='hide'}
+for (i in 1:nrow(A)) {
+  for (j in 1:ncol(A)) {
+    print(paste("El elemento de la fila", i, "y columna", j, "de la matriz A es", A[i,j]))
+  }
+}
+```
