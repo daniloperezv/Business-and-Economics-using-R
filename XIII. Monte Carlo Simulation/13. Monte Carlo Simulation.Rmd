@@ -1,0 +1,129 @@
+---
+title: "Guía 13"
+author: "Danilo Pérez"
+date: "17/6/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Pregunta 1
+
+Matrices de 10000x4:
+Supuesto: X está fijo en muestreo repetido, por eso se define fuera del loop de i
+
+```{r}
+set.seed(123)
+reps = 10000
+betas0 = matrix(NA, nrow = reps, ncol = 4)
+betas1 = matrix(NA, nrow = reps, ncol = 4)
+
+#Betas poblacionales
+beta0 = 1
+beta1 = 0.5
+
+su = 1
+
+n = c(50, 100, 500, 1000)  #tamaños muestrales (cada columna de las matrices definidas indica cada tamaño muestral)
+
+for (j in 1:length(n)) {
+  
+  X = rnorm(n[j], 0, su)
+  
+  for (i in 1:reps) {
+  #u = rnorm(n[j], 0, su)
+  #u = runif(n[j], -2, 2) #c)
+  u = 0.8*X +rnorm(n[j], 0, su) #d)
+  Y = beta0 + beta1*X + u
+  
+  model = lm(Y ~ X)
+  betas0[i,j] = model$coef[1]
+  betas1[i,j] = model$coef[2]
+  }
+}
+
+betas0_df = data.frame(betas0)
+betas1_df = data.frame(betas1)
+```
+
+
+## a)
+```{r}
+apply(betas0_df, 2, mean)
+apply(betas1_df, 2, mean)
+apply(betas0_df, 2, var)
+apply(betas1_df, 2, var)
+```
+
+
+## b)
+```{r}
+#install.packages("ggplot2")
+#install.packages("gridExtra")
+#install.packages("dplyr")
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+```
+
+```{r}
+#Para Beta0
+g10 = ggplot(betas0_df) + geom_histogram(aes(betas0_df[,1], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas0_df[,1]), sd=sd(betas0_df[,1])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=50") + xlab(expression(hat(beta)[0])) + theme_bw()
+
+g20 = ggplot(betas0_df) + geom_histogram(aes(betas0_df[,2], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas0_df[,2]), sd=sd(betas0_df[,2])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=100") + xlab(expression(hat(beta)[0])) + theme_bw()
+
+g30 = ggplot(betas0_df) + geom_histogram(aes(betas0_df[,3], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas0_df[,3]), sd=sd(betas0_df[,3])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=500") + xlab(expression(hat(beta)[0])) + theme_bw()
+
+g40 = ggplot(betas0_df) + geom_histogram(aes(betas0_df[,4], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas0_df[,4]), sd=sd(betas0_df[,4])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=1000") + xlab(expression(hat(beta)[0])) + theme_bw()
+
+grid.arrange(g10, g20, g30, g40, nrow=2, ncol=2)
+```
+
+```{r}
+#Para Beta1
+g11 = ggplot(betas1_df) + geom_histogram(aes(betas1_df[,1], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas1_df[,1]), sd=sd(betas1_df[,1])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=50") + xlab(expression(hat(beta)[1])) + theme_bw()
+
+g21 = ggplot(betas1_df) + geom_histogram(aes(betas1_df[,2], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas1_df[,2]), sd=sd(betas1_df[,2])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=100") + xlab(expression(hat(beta)[1])) + theme_bw()
+
+g31 = ggplot(betas1_df) + geom_histogram(aes(betas1_df[,3], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas1_df[,3]), sd=sd(betas1_df[,3])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=500") + xlab(expression(hat(beta)[1])) + theme_bw()
+
+g41 = ggplot(betas1_df) + geom_histogram(aes(betas1_df[,4], y=..density..), col="black", bins=30) + stat_function(fun = dnorm, args = list(mean=mean(betas1_df[,4]), sd=sd(betas1_df[,4])), geom="line", colour="red", size=1) + ylab("Densidad") + ggtitle("n=1000") + xlab(expression(hat(beta)[1])) + theme_bw()
+
+grid.arrange(g11, g21, g31, g41, nrow=2, ncol=2)
+```
+
+## e)
+```{r}
+rm(list = ls())
+#set.seed(123)
+reps = 10000
+ci = matrix(NA, nrow = reps, ncol = 2)
+
+beta0 = 1
+beta1 = 0.5
+
+su = 1
+
+n = 1000  #tamaño muestral
+
+X = rnorm(n,4,1)
+
+for (i in 1:reps) {
+  u = rnorm(n,0,su)
+  
+  Y = beta0 + beta1*X + u
+  model = lm(Y ~ X)
+  ci[i,1] = confint(model, "X")[1,1]
+  ci[i,2] = confint(model, "X")[1,2]
+}
+
+ci_df0 = data.frame(ci)
+ci_df = ci_df0 %>% mutate(X3 = ifelse(X2 > 0.5 & X1 < 0.5, 1, 0))
+
+mean(ci_df[,3])
+table(ci_df$X3)
+```
+
+
