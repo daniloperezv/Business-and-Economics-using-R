@@ -1,0 +1,39 @@
+---
+title: "Guía 6"
+author: "Danilo Perez"
+date: "15/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Pregunta 3
+
+```{r}
+library(sf)
+library(tmap)
+library(tmaptools)
+library(dplyr)
+library(viridis)
+```
+
+```{r}
+wbData3 = readRDS("/cloud/project/datos/wbData3.rds")
+wbData4 = wbData3 %>% filter(year == 2015)
+world = data("World", package = "tmap")
+```
+
+```{r}
+mundial = append_data(World, wbData4, key.shp = "iso_a3", key.data = "iso3c", ignore.na = TRUE)
+palette = rev(plasma(9))
+tmap_mode("view")
+#tm_view(text.size.variable = TRUE)
+tm_shape(mundial, projection = "longlat")+
+  tm_fill(col = "lifeExpectancy", alpha = 0.5, n = 4, palette = palette,
+          title = "Expectativa de vida (anos)")+
+  tm_borders()
+```
+
+
