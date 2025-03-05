@@ -1,0 +1,154 @@
+---
+title: "Perez"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Guía 4
+
+```{r}
+#install.packages("dplyr")
+library(dplyr)
+```
+
+1) 
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("ggthemes")
+#install.packages("gridExtra")
+#install.packages("ggstance")
+#install.packages("ggrepel")
+library(ggplot2)
+library(ggthemes)
+library(gridExtra)
+library(ggstance)
+library(ggrepel)
+```
+
+```{r}
+wbData3 = readRDS("/cloud/project/wbData3.rds")
+```
+
+1)
+
+```{r}
+
+P1 = wbData3 %>% filter(country %in% c("Chile", "Japan", "United States")) %>% ggplot(aes(x = year, y = lifeExpectancy, col = country)) + geom_line(size = 1.3) + scale_x_continuous(breaks = seq(1960, 2016, 10)) + labs(title = "Expectativa de vida al nacer", subtitle = "1960-2016", x = "Año", y = "Expectativa de vida al nacer (años)") + 
+  scale_color_discrete(name ="", labels = c("Chile", "Japon", "Estados Unidos")) + theme_stata()
+
+wbData3 %>% filter(country %in% c("Chile", "Japan", "United States")) %>%  ggplot(aes(x = year, y = lifeExpectancy, col = country)) + geom_line(size = 1.3) + scale_x_continuous(breaks = seq(1960, 2016, 10)) + labs(title = "Expectativa de vida al nacer", subtitle = "1960-2016", x = "Año", y = "Expectativa de vida al nacer (años)") + 
+  scale_color_discrete(name ="", labels = c("Chile", "Japon", "Estados Unidos")) +  theme_tufte()
+
+
+wbData3 %>% filter(country %in% c("Chile", "Japan", "United States")) %>% ggplot(aes(x = year, y = lifeExpectancy)) + geom_line(aes(lty = country), size=1.3) + scale_x_continuous(breaks = seq(1960, 2016, 10)) + labs(title = "Expectativa de vida al nacer", subtitle = "1960-2016", x = "Año", y = "Expectativa de vida al nacer (años)") + scale_linetype_manual(name="", values = c("dotted", "twodash", "solid"), labels = c("Chile", "Japon", "Estados Unidos")) + theme_tufte()
+```
+
+2)
+
+```{r}
+wbData3 %>% filter(year == 2015) %>% ggplot(aes(x = region, y = lifeExpectancy, fill = region)) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(title = "Expectativa de vida al nacer por regiones del mundo",
+       subtitle = "2015",
+       x = "",
+       y = "Expectativa de vida al nacer(años)") +
+  coord_flip() + theme_bw()
+```
+
+3)
+
+```{r}
+wbData3 %>% filter(year == 2015) %>%
+  ggplot(aes(gdppc)) + 
+  geom_histogram(bins = 50, col="black", fill = "red")+ 
+  scale_x_continuous(labels = function(x) x/1000,
+                     breaks = c(0,25000,50000,75000,100000,125000))+
+  labs(title = "PIB per cápita alrededor del mundo",
+       subtitle = "2015",
+       x = "PIB per cápita(miles de dólares)",
+       y = NULL)+
+  theme_bw()
+```
+
+4)
+
+```{r}
+wbData3 %>% filter(year == 2015) %>%
+  ggplot(aes(x = gdppc))+
+  stat_ecdf(geom = "step")+
+  scale_x_continuous(labels = function(x) x/1000,
+                     breaks = c(0,25000,50000,75000,100000,125000),
+                     expand = c(0,0))+
+  scale_y_continuous(expand = c(0,0))+
+  labs(title = "PIB per capita mundial 2015",
+       subtitle = "Distribución acumulada",
+       x = "PIB per cápita(miles de dólares)",
+       y = NULL)+
+  theme_minimal()
+```
+
+5)
+
+```{r}
+wbData3 %>% filter(year == 2015) %>%
+  ggplot(aes(x = gdppc, y = lifeExpectancy, col = region))+
+  geom_point(alpha = 0.5) +
+  scale_x_continuous(labels = function(x) x/1000,
+                     breaks = c(0,25000,50000,75000,100000,125000))+
+  scale_color_brewer(name = NULL, palette = "Set2") + 
+  labs(title = "Expectativa de vida al nacer versus PIB per cápita",
+       subtitle = "2015",
+       x = "PIB per cápita (miles de dólares)",
+       y ="Expectativa de vida al nacer(años)") +
+  theme_classic()
+```
+
+6)
+
+```{r}
+#install.packages("plotly")
+library(plotly)
+```
+
+```{r}
+p1 = wbData3 %>% filter(year == 2015) %>% ggplot(aes(x = gdppc, y = lifeExpectancy, col = region, group = country)) + geom_point(aes(size = population), alpha = 0.7) + scale_x_continuous(labels = function(x) x/1000,breaks = c(0, 25000, 50000, 75000, 100000, 125000)) +  scale_size_area(name ="", max_size = 12) +  scale_color_brewer(name = NULL, palette = "Set2") +  labs(title = "Expectativa de vida al nacer versus PIB per capita",
+       subtitle = "2015",
+       x = "PIB per cápita(miles de dólares)",
+       y = "Expectativa de vida al nacer (años)") +
+  theme_bw(base_size = 10)
+
+ggplotly(p1, height = 500, width = 890)
+```
+
+7)
+
+```{r}
+p2 = wbData3 %>% filter(year >= 1990) %>%
+  ggplot(aes(x = gdppc,y = lifeExpectancy,frame = year,col = region))+
+  geom_point(aes(size = population),alpha = 0.7)+
+  scale_x_continuous(labels = function(x) x/1000,
+                     breaks = c(0,25000,50000,75000,100000,125000))+
+  scale_size_area(name = "",max_size = 12)+
+  scale_color_brewer(name = "", palette = "Set2")+
+  labs(title = "Expectativa de vida al nacer versus PIB per capita",
+       x = "PIB per capita (miles de dolares)",
+       y = "Expectativa de vida al nacer (años)")+
+  theme_bw(base_size = 13)
+
+ggplotly(p2,height = 500,width = 890) %>%
+  animation_opts(frame = 300,
+                 easing = "linear",
+                 redraw = FALSE)
+```
+
+
+
+
+
+
