@@ -1,0 +1,208 @@
+---
+title: "Guía 5"
+author: "Danilo Perez"
+date: "15/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Background
+
+Se comparan resultados (estimadores) experimentales con no experimentales. Trabajaremos con los datos del experimento.
+
+Importamos la base de datos. Para esto es necesario instalar el paquete foreign.
+
+
+```{r}
+#install.packages("haven")
+#install.packages("dplyr")
+#install.packages("tidyverse")
+#install.packages("ggplot2")
+#install.packages("ggthemes")
+#install.packages("gridExtra")
+#install.packages("foreign")
+library(haven)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(gridExtra)
+library(foreign)
+```
+
+```{r}
+nsw = read.dta("/cloud/project/nsw.dta")
+class(nsw$treat)
+```
+
+# Pregunta 1
+
+```{r}
+nsw$treat = as.factor(nsw$treat)
+nsw = nsw%>% mutate(treat = recode_factor(treat, "1" = "Tratamiento", "0" = "Control"))
+table(nsw$treat)
+```
+
+```{r}
+nsw %>% group_by(treat) %>% count() %>%
+  ggplot(aes(x = treat,y = n))+
+  geom_bar(stat = "identity",fill = "#8d1414")
+```
+
+```{r}
+nsw%>%group_by(treat) %>% count() %>%
+  ggplot(aes(x = treat,y = n))+
+  geom_bar(stat = "identity",fill = "#8d1414")+
+  geom_text(aes(label = paste0(n," personas"),vjust = -0.8),size = 6)+
+  scale_y_continuous(limits = c(0,500),labels = NULL)+
+  labs(x = NULL, title = "Tratamiento vs control")+
+  theme(plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.text = element_text(size = 15),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_blank())
+```
+
+```{r}
+nsw %>% count(treat) %>% arrange(desc(treat)) %>%
+  mutate(porc = prop.table(n)*100, lab.ypos = cumsum(porc) - 0.58*porc) %>% ggplot(aes(x = "", y = porc, fill = treat)) +
+  geom_bar(width = 1,stat = "identity", color = "white") +
+  coord_polar("y", start = 0) +
+  geom_text(aes(y = lab.ypos, label = paste0(round(porc,1), "%")), color = "white") +
+  scale_fill_manual(name = NULL, values = c("#8d1414", "#377EBB")) +
+  theme_void()
+```
+
+
+# Pregunta 2
+
+```{r}
+nsw %>% group_by(treat) %>% summarise(
+  avg_age = mean(age, na.rm = TRUE),
+  avg_educ = mean(education, na.rm = TRUE),
+  avg_black = mean(black, na.rm = TRUE),
+  avg_hisp = mean(hispanic, na.rm = TRUE),
+  avg_mar = mean(married, na.rm = TRUE),
+  avg_nodeg = mean(nodegree, na.rm = TRUE))
+```
+
+```{r}
+nsw %>% group_by(treat) %>% summarise_at(vars(age,education,black,hispanic,married,nodegree), mean)
+```
+
+
+# Pregunta 3
+
+```{r}
+val = c("#8d1414", "#377EB8")
+lab = c("No Hispano", "Hispano")
+
+nsw %>% ggplot(aes(x = treat, fill = factor(hispanic))) + geom_bar(position = "fill") + scale_fill_manual("", values = val, labels = lab) +
+  labs(x = "", y = "Proporción (%)") + theme_fivethirtyeight()
+```
+
+```{r}
+nsw %>% ggplot(aes(x = treat, fill = factor(hispanic))) + geom_bar(position = "dodge") + scale_fill_manual("", values = val, labels = lab) +
+  labs(x = "", y = "Proporción (%)") + theme_fivethirtyeight()
+```
+Como alternativas para geom_bar(position = "") tenemos dodge, fill, y stack
+
+
+# Pregunta 4.1
+
+```{r}
+avg_earnings = nsw %>% group_by(treat) %>% summarise(
+  avg_re75 = mean(re75, na.rm = TRUE),
+  avg_re78 = mean(re78, na.rm = TRUE)
+)
+avg_earnings
+```
+
+```{r}
+summary(lm(re78 ~ treat, data = nsw))
+```
+
+```{r}
+#t.test(re75 ~ treat, data = nsw)
+#t.test(re78 ~ treat, data = nsw)
+```
+
+
+# Pregunta 4.2
+
+```{r}
+nsw %>% group_by(treat) %>% summarise(avg_re78 = mean(re78, na.rm = TRUE)) %>%
+  ggplot(aes(x = treat,y = avg_re78)) +
+  geom_bar(stat = "identity",fill = "#8d1414") +
+  scale_y_continuous(limits = c(0,8000),labels = NULL) +
+  geom_text(aes(label = paste0("$", round(avg_re78,1))),vjust = -0.8,size = 6)+
+  labs(x = NULL, title = "Ingreso promedio en 1978 (dólares)") +
+  theme(plot.title = element_text(size = 16),
+        plot.subtitle = element_text(size = 14),
+        axis.text = element_text(size = 15),
+        axis.ticks = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_blank())
+```
+
+
+# Pregunta 5
+```{r}
+nsw %>% ggplot(aes(x = treat, y = re78, fill = treat)) +
+  geom_violin() +
+  geom_boxplot(width = 0.1) + 
+  scale_y_log10() +
+  labs(x = NULL,
+       y = "Ingresos 1978 (en dólares)") +
+  scale_fill_manual("", values = c("#8d1414","#377EB8")) +
+  theme(plot.title = element_text(size = 16),
+        plot.subtitle = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        panel.background = element_blank(),
+        axis.line = element_line())
+```
+
+
+# Pregunta 6
+```{r}
+nsw %>% ggplot(aes(x = re78)) +
+  geom_histogram(color ="black", fill = "#8d1414") +
+  labs(x = "Ingresos 1978 (en dólares)",
+       y = "Frecuencia") +
+  theme(axis.title = element_text(size = 16),
+        axis.text = element_text(size = 15),
+        axis.line = element_line(),
+        panel.background = element_blank()) +
+  facet_grid(.~treat)
+```
+
+```{r}
+nsw %>% ggplot(aes(x = re78)) +
+  geom_density(color = "black", fill = "#8EC028") +
+  labs(x = "Ingresos 1978 (en dólares)",
+       y = "Densidad") +
+  theme_bw() +
+  facet_grid(.~treat)
+```
+
+
+# Pregunta 7
+
+```{r}
+params = nsw %>% filter(treat == "Tratamiento") %>%
+  summarize(mean = mean(re78, na.rm = TRUE), sd=sd(re78, na.rm = TRUE))
+nsw %>% filter(treat == "Tratamiento") %>%
+  ggplot(aes(sample = re78)) +
+  geom_qq(dparams = params) + geom_abline() + theme_bw()
+```
+
+
+
+
+
