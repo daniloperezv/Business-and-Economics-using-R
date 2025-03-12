@@ -1,4 +1,4 @@
-# R-Projects
+# Topics in Economics and Business using R
 The codes and archives in this repository are based on the course _Topics in Economics and Business using R_ instructed by professor Víctor Macías in the University of Chile in 2019.
 
 The objectives of the course were to:
